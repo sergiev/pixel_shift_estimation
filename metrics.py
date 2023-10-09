@@ -55,8 +55,8 @@ def qa_np(
     ppm = pixel_error_per_meter(
         a_meter=origin_meters[:-1],
         b_meter=origin_meters[1:],
-        real_pix_shift=real_pix_shift,
-        pred_pix_shift=pred_pix_shift,
+        real_pix_shift=real_pix_shift[1:],
+        pred_pix_shift=pred_pix_shift[1:],
     )
     return {
         "pixel_error": pixel_error,
@@ -72,7 +72,7 @@ def qa_pd(gt: pd.DataFrame, pred: pd.DataFrame, meta: pd.DataFrame) -> pd.DataFr
     pred_pix_shift = pred[["pixel_shift_x", "pixel_shift_y"]].to_numpy()
     meters_in_pixel = meta[["meters_in_pixel_x", "meters_in_pixel_y"]].to_numpy()
     total = qa_np(origin_meters, real_pix_shift, pred_pix_shift, meters_in_pixel)
-    df = pd.DataFrame(np.hstack((total.values())), columns=total.keys())
+    df = pd.DataFrame(total)
     return df
 
 

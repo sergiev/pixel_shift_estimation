@@ -1,0 +1,6 @@
+imreg_dft_nw
+numpy
+opencv-python
+pandas
+tqdm
+# if you need geo_tiling.py you also have to install gdal, it may be non-trivial. https://anaconda.org/conda-forge/gdal

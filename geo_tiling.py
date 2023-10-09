@@ -32,16 +32,6 @@ def get_center_xy(ds):
     return (minx + maxx) / 2, (miny + maxy) / 2
 
 
-def rectify(ds: gdal.Dataset) -> gdal.Dataset:
-    """useless and harmful"""
-    gt = list(ds.GetGeoTransform())
-    gt[1] = abs(gt[1])
-    gt[-1] = abs(gt[-1])
-    result = deepcopy(ds)
-    result.SetGeoTransform(gt)
-    return result
-
-
 def shift(x: float, y: float, v_min: float, v_max: float) -> Tuple[float, float]:
     """random coordinate shift. For cartesian systems only."""
     v = random.uniform(v_min, v_max)
@@ -107,6 +97,12 @@ def generate_samples(
     os.makedirs(images_dir, exist_ok=True)
     center_x, center_y = get_center_xy(ds)
     _, pixel_width_meters, _, _, _, pixel_height_meters = ds.GetGeoTransform()
+    meta_path = os.path.join(destination_directory, "meta.csv")
+    meta = {
+        "meters_in_pixel_x": [pixel_width_meters],
+        "meters_in_pixel_y": [pixel_height_meters]
+    }
+    pd.DataFrame(meta).to_csv(meta_path, index=None)
     result = []
     for i in tqdm(range(n)):
         success = False
@@ -127,18 +123,18 @@ def generate_samples(
             {
                 "meter_center_x": center_x,
                 "meter_center_y": center_y,
-                "pixel_shift_x": shift_x,
-                "pixel_shift_y": shift_y,
+                "pixel_shift_x": shift_x if i else 0,
+                "pixel_shift_y": shift_y if i else 0,
             }
         )
     return result
 
 
 def main(src_path: str, destination_directory: str):
-    csv_path = os.path.join(destination_directory, "centers.csv")
+    shift_path = os.path.join(destination_directory, "centers.csv")
     ds = gdal.Open(src_path)
     result = generate_samples(ds, destination_directory)
-    pd.DataFrame(result).to_csv(csv_path)
+    pd.DataFrame(result).to_csv(shift_path)
 
 
 def gdal_error_handler(err_class, err_num, err_msg):
